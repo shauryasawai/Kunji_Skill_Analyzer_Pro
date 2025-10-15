@@ -1,0 +1,12 @@
+{
+  "Docker": ["Kubernetes", "AWS ECS", "Containerization", "Docker Compose"],
+  "Python": ["Django", "Flask", "FastAPI", "NumPy", "Pandas"],
+  "JavaScript": ["React", "Node.js", "TypeScript", "Vue.js"],
+  "Recruitment": ["Talent Acquisition", "Interviewing", "Onboarding", "ATS"],
+  "Marketing": ["SEO", "Content Strategy", "Campaign Management", "Google Analytics"],
+  "Finance": ["Budgeting", "Forecasting", "Financial Modelling", "Excel"],
+  "SQL": ["Database Design", "PostgreSQL", "MySQL", "Data Analysis"],
+  "Project Management": ["Agile", "Scrum", "JIRA", "Stakeholder Management"],
+  "Sales": ["CRM", "Lead Generation", "Negotiation", "Account Management"],
+  "HR": ["Employee Relations", "Performance Management", "HRMS", "Compliance"]
+}

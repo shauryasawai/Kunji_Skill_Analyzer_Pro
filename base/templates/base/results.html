@@ -1,0 +1,159 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-11">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="card-title mb-0">✅ Complete Job Analysis</h2>
+                        <p class="text-muted mb-0">Job Title: <strong>{{ jd.title }}</strong></p>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary fs-6">{{ jd.role_category }}</span>
+                        <span class="badge bg-info fs-6">{{ jd.experience_level }}</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- All Skills Section -->
+                <div class="mb-5">
+                    <h4 class="mb-3">🎯 All Required Skills ({{ all_skills|length }} skills)</h4>
+                    <p class="text-muted small">Complete list of every skill, tool, and technology mentioned in this job description</p>
+                    <div class="skills-grid">
+                        {% for skill in all_skills %}
+                            <span class="skill-badge all-skills">{{ skill }}</span>
+                        {% empty %}
+                            <p class="text-muted">No skills extracted</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Categorized Skills -->
+                {% if skill_categories %}
+                <div class="mb-5">
+                    <h4 class="mb-3">📊 Skills by Category</h4>
+                    <div class="row">
+                        {% for category, skills in skill_categories.items %}
+                        {% if skills %}
+                        <div class="col-md-6 mb-4">
+                            <div class="category-box">
+                                <h6 class="category-title">{{ category }}</h6>
+                                <div>
+                                    {% for skill in skills %}
+                                        <span class="skill-badge category-skill">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Key Responsibilities -->
+                {% if responsibilities %}
+                <div class="mb-5">
+                    <h4 class="mb-3">📋 Key Responsibilities</h4>
+                    <ul class="responsibility-list">
+                        {% for responsibility in responsibilities %}
+                            <li>{{ responsibility }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <!-- Qualifications -->
+                {% if qualifications %}
+                <div class="mb-5">
+                    <h4 class="mb-3">🎓 Required Qualifications</h4>
+                    <ul class="qualification-list">
+                        {% for qualification in qualifications %}
+                            <li>{{ qualification }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <!-- Job Summary Box -->
+                <div class="alert alert-info">
+                    <h5>💡 Job Summary</h5>
+                    <p class="mb-2"><strong>Role:</strong> {{ jd.role_category }} position requiring {{ jd.experience_level|lower }} experience</p>
+                    <p class="mb-0"><strong>Total Skills Required:</strong> {{ all_skills|length }} different skills and competencies</p>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-5">
+                    <a href="{% url 'upload_jd' %}" class="btn btn-secondary btn-lg">← Analyze Another JD</a>
+                    <button onclick="window.print()" class="btn btn-outline-primary btn-lg">🖨️ Print Full Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .skills-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .skill-badge {
+        padding: 10px 16px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 500;
+        display: inline-block;
+        transition: transform 0.2s;
+    }
+    
+    .skill-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .all-skills {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .category-skill {
+        background: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #90caf9;
+    }
+    
+    .category-box {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .category-title {
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 12px;
+        font-size: 16px;
+    }
+    
+    .responsibility-list, .qualification-list {
+        line-height: 2;
+        font-size: 15px;
+    }
+    
+    .responsibility-list li, .qualification-list li {
+        margin-bottom: 8px;
+        padding-left: 10px;
+        border-left: 3px solid #667eea;
+    }
+    
+    @media print {
+        .btn { display: none; }
+        .navbar { display: none; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-5">
+                <h2 class="card-title text-center mb-4">📄 Upload Job Description</h2>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Job Title</label>
+                        {{ form.title }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Upload JD File (TXT, PDF, DOCX)</label>
+                        {{ form.file }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Job Domain (Optional)</label>
+                        {{ form.domain }}
+                        <small class="form-text text-muted">Helps improve skill detection accuracy</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">🚀 Analyze JD</button>
+                </form>
+            </div>
+        </div>
+        
+        {% if recent_jds %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>📊 Recent Analyses</h5>
+                <ul class="list-group">
+                    {% for jd in recent_jds %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ jd.title }}</span>
+                        <a href="{% url 'results' jd.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
