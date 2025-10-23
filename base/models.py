@@ -10,6 +10,8 @@ class JobDescription(models.Model):
     experience_level = models.CharField(max_length=100, blank=True, null=True)
     key_responsibilities = models.TextField(blank=True)  # Key responsibilities
     qualifications = models.TextField(blank=True)  # Education/certifications
+    linkedin_search_string = models.TextField(blank=True)  # LinkedIn boolean search
+    linkedin_skills_string = models.TextField(blank=True)  # Optimized skills for LinkedIn
     
     class Meta:
         ordering = ['-uploaded_at']
@@ -33,4 +35,10 @@ class JobDescription(models.Model):
         '''Return qualifications as a list'''
         if self.qualifications:
             return [q.strip() for q in self.qualifications.split('|') if q.strip()]
+        return []
+    
+    def get_linkedin_skills_list(self):
+        '''Return LinkedIn optimized skills as a list'''
+        if self.linkedin_skills_string:
+            return [s.strip() for s in self.linkedin_skills_string.split(',') if s.strip()]
         return []

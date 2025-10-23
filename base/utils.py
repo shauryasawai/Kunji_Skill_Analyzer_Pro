@@ -7,6 +7,42 @@ from django.conf import settings
 from PyPDF2 import PdfReader
 from docx import Document
 
+def generate_linkedin_search_strings(skills, role_title, experience_level):
+    '''Generate optimized LinkedIn Recruiter boolean search strings'''
+    
+    # Clean and prepare skills
+    top_skills = skills[:15] if len(skills) > 15 else skills
+    
+    # Create different search string variations
+    searches = {}
+    
+    # 1. Basic Boolean Search (AND)
+    basic_and = " AND ".join([f'"{skill}"' for skill in top_skills[:8]])
+    searches['basic_and'] = basic_and
+    
+    # 2. Flexible Boolean Search (OR for similar skills)
+    if len(top_skills) >= 3:
+        part1 = " OR ".join([f'"{skill}"' for skill in top_skills[:3]])
+        part2 = " OR ".join([f'"{skill}"' for skill in top_skills[3:6]])
+        flexible = f'({part1}) AND ({part2})' if part2 else f'({part1})'
+        searches['flexible'] = flexible
+    
+    # 3. Title + Key Skills
+    skills_part = " AND ".join([f'"{skill}"' for skill in top_skills[:5]])
+    title_search = f'(title:"{role_title}") AND ({skills_part})'
+    searches['with_title'] = title_search
+    
+    # 4. Simple comma-separated for LinkedIn Skills filter
+    skills_filter = ", ".join(top_skills[:10])
+    searches['skills_filter'] = skills_filter
+    
+    # 5. X-Ray Search (for Google/LinkedIn combination)
+    xray_skills = " ".join([f'"{skill}"' for skill in top_skills[:6]])
+    xray_search = f'site:linkedin.com/in/ "{role_title}" {xray_skills}'
+    searches['xray'] = xray_search
+    
+    return searches
+
 def extract_text_from_file(file_path):
     '''Extract text from TXT, PDF, or DOCX files'''
     ext = Path(file_path).suffix.lower()
@@ -61,14 +97,20 @@ Return a structured JSON with:
 
 2. "skill_categories": Organize the skills into categories like:
    {{"Technical": [...], "Tools": [...], "Soft Skills": [...], "Domain Knowledge": [...], "Certifications": [...]}}
+   
+3. "linkedin_optimized_skills": A list of 8-15 MOST IMPORTANT skills optimized for LinkedIn Recruiter search. 
+   - Focus on searchable, industry-standard terms
+   - Remove generic terms like "communication" or "teamwork"
+   - Prioritize: specific technologies, tools, certifications, frameworks
+   - Use exact names as they appear on LinkedIn (e.g., "JavaScript" not "JS", "Amazon Web Services (AWS)" not just "AWS")
 
-3. "role_category": The most suitable role category (e.g., HR, Marketing, IT, Finance, Sales, Operations, etc.)
+4. "role_category": The most suitable role category (e.g., HR, Marketing, IT, Finance, Sales, Operations, etc.)
 
-4. "experience_level": one of ["Entry Level", "Mid Level", "Senior Level", "Executive Level"]
+5. "experience_level": one of ["Entry Level", "Mid Level", "Senior Level", "Executive Level"]
 
-5. "key_responsibilities": List 5-7 main responsibilities mentioned in the JD
+6. "key_responsibilities": List 5-7 main responsibilities mentioned in the JD
 
-6. "qualifications": Educational requirements and certifications
+7. "qualifications": Educational requirements and certifications
 
 {domain_context}
 
@@ -100,6 +142,10 @@ JD:
             result = json.loads(cleaned)
             
             # Validate and normalize expected keys
+            
+            if "linkedin_optimized_skills" not in result:
+                result["linkedin_optimized_skills"] = result.get("all_skills", [])[:10]
+                
             if "all_skills" not in result:
                 result["all_skills"] = []
             
@@ -225,3 +271,6 @@ def save_to_excel(jd_data):
         
     except Exception as e:
         print(f"❌ Error saving to Excel: {e}")
+        
+        
+        

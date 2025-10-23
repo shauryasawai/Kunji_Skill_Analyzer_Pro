@@ -18,9 +18,74 @@
                 
                 <hr>
                 
+                <!-- LinkedIn Search Section -->
+                <div class="alert alert-success mb-5">
+                    <h4 class="alert-heading">🔍 LinkedIn Recruiter Search Strings</h4>
+                    <p class="mb-3">Copy these optimized search strings to find candidates on LinkedIn</p>
+                    
+                    {% if linkedin_searches %}
+                    
+                    <!-- Skills Filter -->
+                    <div class="search-box mb-3">
+                        <h6>📌 Skills Filter (Use in LinkedIn Skills Section):</h6>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ linkedin_searches.skills_filter }}" id="skills-filter" readonly>
+                            <button class="btn btn-primary" onclick="copyToClipboard('skills-filter', this)">
+                                📋 Copy
+                            </button>
+                        </div>
+                        <small class="text-muted">Paste this in LinkedIn's "Skills" filter</small>
+                    </div>
+                    
+                    <!-- Basic Boolean Search -->
+                    
+                    <!-- Flexible Search -->
+                    {% if linkedin_searches.flexible %}
+                    <div class="search-box mb-3">
+                        <h6>⚡ Flexible Boolean Search (OR combinations):</h6>
+                        <div class="input-group">
+                            <textarea class="form-control" rows="2" id="boolean-flexible" readonly>{{ linkedin_searches.flexible }}</textarea>
+                            <button class="btn btn-primary" onclick="copyToClipboard('boolean-flexible', this)">
+                                📋 Copy
+                            </button>
+                        </div>
+                        <small class="text-muted">More results with flexible matching</small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Title + Skills Search -->
+                    <div class="search-box mb-3">
+                        <h6>👔 Title + Key Skills Search:</h6>
+                        <div class="input-group">
+                            <textarea class="form-control" rows="2" id="title-search" readonly>{{ linkedin_searches.with_title }}</textarea>
+                            <button class="btn btn-primary" onclick="copyToClipboard('title-search', this)">
+                                📋 Copy
+                            </button>
+                        </div>
+                        <small class="text-muted">Searches for specific job title with key skills</small>
+                    </div>
+                    
+                    {% endif %}
+                </div>
+                
+                <!-- LinkedIn Optimized Skills -->
+                <div class="mb-5">
+                    <h4 class="mb-3">🎯 LinkedIn Optimized Skills ({{ linkedin_skills|length }} skills)</h4>
+                    <p class="text-muted small">Most important skills for LinkedIn search - industry-standard searchable terms</p>
+                    <div class="skills-grid">
+                        {% for skill in linkedin_skills %}
+                            <span class="skill-badge linkedin-skill">{{ skill }}</span>
+                        {% empty %}
+                            <p class="text-muted">No LinkedIn skills extracted</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <hr>
+                
                 <!-- All Skills Section -->
                 <div class="mb-5">
-                    <h4 class="mb-3">🎯 All Required Skills ({{ all_skills|length }} skills)</h4>
+                    <h4 class="mb-3">📋 All Required Skills ({{ all_skills|length }} skills)</h4>
                     <p class="text-muted small">Complete list of every skill, tool, and technology mentioned in this job description</p>
                     <div class="skills-grid">
                         {% for skill in all_skills %}
@@ -80,9 +145,10 @@
                 
                 <!-- Job Summary Box -->
                 <div class="alert alert-info">
-                    <h5>💡 Job Summary</h5>
+                    <h5>💡 Recruitment Summary</h5>
                     <p class="mb-2"><strong>Role:</strong> {{ jd.role_category }} position requiring {{ jd.experience_level|lower }} experience</p>
-                    <p class="mb-0"><strong>Total Skills Required:</strong> {{ all_skills|length }} different skills and competencies</p>
+                    <p class="mb-2"><strong>Total Skills:</strong> {{ all_skills|length }} skills identified</p>
+                    <p class="mb-0"><strong>Key Search Skills:</strong> {{ linkedin_skills|length }} optimized for LinkedIn recruiting</p>
                 </div>
                 
                 <div class="d-flex justify-content-between mt-5">
@@ -95,6 +161,26 @@
 </div>
 
 <style>
+    .search-box {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+    }
+    
+    .search-box h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .search-box textarea,
+    .search-box input {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        background: #f8f9fa;
+    }
+    
     .skills-grid {
         display: flex;
         flex-wrap: wrap;
@@ -113,6 +199,13 @@
     .skill-badge:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .linkedin-skill {
+        background: #0077B5;
+        color: white;
+        border: 2px solid #005582;
+        font-weight: 600;
     }
     
     .all-skills {
@@ -151,9 +244,43 @@
         border-left: 3px solid #667eea;
     }
     
+    .btn-primary {
+        white-space: nowrap;
+    }
+    
+    .input-group textarea {
+        resize: none;
+    }
+    
     @media print {
         .btn { display: none; }
         .navbar { display: none; }
+        .search-box button { display: none; }
     }
 </style>
+
+<script>
+function copyToClipboard(elementId, button) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999); // For mobile devices
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(element.value).then(function() {
+        // Change button text temporarily
+        const originalText = button.innerHTML;
+        button.innerHTML = '✅ Copied!';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-success');
+        
+        setTimeout(function() {
+            button.innerHTML = originalText;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-primary');
+        }, 2000);
+    }).catch(function(err) {
+        alert('Failed to copy: ' + err);
+    });
+}
+</script>
 {% endblock %}
