@@ -142,6 +142,41 @@
                     </ul>
                 </div>
                 {% endif %}
+
+                <!-- Candidate Matching Section -->
+                 <div class="card mb-5" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <div class="card-body p-4">
+                        <h4 class="text-white mb-3">🎯 Match Candidates from Your Database</h4>
+                        <p class="mb-4">Find candidates from your Excel database who match these skill requirements</p>
+                        {% if candidate_databases %}
+                        <form method="POST" action="{% url 'match_candidates' jd.pk %}">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <label class="text-white mb-2">Select Candidate Database:</label>
+                                    {{ match_form.candidate_database }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="text-white mb-2">Min Match %:</label>
+                                    {{ match_form.min_match_percentage }}
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-light w-100">
+                                        🔍 Find Matches
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="text-center">
+                            <p class="text-white mb-3">No candidate databases uploaded yet</p>
+                            <a href="{% url 'upload_candidate_database' %}" class="btn btn-light">
+                                📤 Upload Candidate Database
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
                 
                 <!-- Job Summary Box -->
                 <div class="alert alert-info">

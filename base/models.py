@@ -42,3 +42,15 @@ class JobDescription(models.Model):
         if self.linkedin_skills_string:
             return [s.strip() for s in self.linkedin_skills_string.split(',') if s.strip()]
         return []
+    
+class CandidateDatabase(models.Model):
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file = models.FileField(upload_to='candidate_databases/')
+    total_candidates = models.IntegerField(default=0)
+    file_name = models.CharField(max_length=255)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f"{self.file_name} - {self.total_candidates} candidates"

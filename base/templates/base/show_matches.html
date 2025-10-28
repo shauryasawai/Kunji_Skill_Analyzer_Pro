@@ -1,0 +1,140 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-11">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="card-title mb-0">🎯 Matched Candidates</h2>
+                        <p class="text-muted mb-0">Job: <strong>{{ jd.title }}</strong></p>
+                    </div>
+                    <div>
+                        <span class="badge bg-success fs-5">{{ total_matches }} Matches</span>
+                    </div>
+                </div>
+                
+                {% if output_file %}
+                <div class="alert alert-success">
+                    <strong>✅ Export Complete!</strong>
+                    <a href="/media/{{ output_file }}" class="btn btn-sm btn-primary ms-3" download>
+                        📥 Download Full Report (Excel)
+                    </a>
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                {% if matched_candidates %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Match %</th>
+                                <th>Name</th>
+                                <th>Designation</th>
+                                <th>Current Company</th>
+                                <th>Experience</th>
+                                <th>Location</th>
+                                <th>Matched Skills</th>
+                                <th>Contact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate in matched_candidates %}
+                            <tr>
+                                <td>
+                                    <div class="progress" style="width: 60px; height: 30px;">
+                                        <div class="progress-bar 
+                                            {% if candidate.match_percentage >= 80 %}bg-success
+                                            {% elif candidate.match_percentage >= 60 %}bg-info
+                                            {% elif candidate.match_percentage >= 40 %}bg-warning
+                                            {% else %}bg-secondary{% endif %}"
+                                            role="progressbar" 
+                                            style="width: {{ candidate.match_percentage }}%">
+                                            <strong>{{ candidate.match_percentage }}%</strong>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ candidate.matched_skills_count }}/{{ candidate.total_required_skills }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ candidate.name }}</strong>
+                                    {% if candidate.linkedin != 'N/A' %}
+                                        <br><a href="{{ candidate.linkedin }}" target="_blank" class="text-primary">
+                                            <small>🔗 LinkedIn</small>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td>{{ candidate.designation }}</td>
+                                <td>{{ candidate.current_company }}</td>
+                                <td>{{ candidate.experience }}</td>
+                                <td>{{ candidate.location }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#skillsModal{{ forloop.counter }}">
+                                        View Skills
+                                    </button>
+                                    
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="skillsModal{{ forloop.counter }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Skills - {{ candidate.name }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <h6>✅ Matched Skills ({{ candidate.matched_skills_count }}):</h6>
+                                                    <div class="mb-3">
+                                                        {% for skill in candidate.matched_skills %}
+                                                            <span class="badge bg-success m-1">{{ skill }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <hr>
+                                                    <h6>📋 All Candidate Skills:</h6>
+                                                    <p>{{ candidate.skills }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small>
+                                        📧 {{ candidate.email }}<br>
+                                        📱 {{ candidate.contact }}
+                                    </small>
+                                    {% if candidate.cv_link != 'N/A' %}
+                                        <br><a href="{{ candidate.cv_link }}" target="_blank" class="btn btn-xs btn-outline-primary mt-1">
+                                            📄 CV
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if total_matches > 50 %}
+                <div class="alert alert-info">
+                    <strong>Note:</strong> Showing first 50 matches. Download the full Excel report to see all {{ total_matches }} candidates.
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="alert alert-warning text-center">
+                    No matching candidates found.
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'results' jd.pk %}" class="btn btn-secondary">← Back to JD Analysis</a>
+                    <a href="{% url 'upload_jd' %}" class="btn btn-outline-primary">Analyze Another JD</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -245,10 +245,128 @@ def expand_skills_with_map(primary_skills, secondary_skills):
     
     return list(expanded_secondary)
 
-def save_to_excel(jd_data):
-    '''Save job description data to Excel database'''
+import pandas as pd
+from pathlib import Path
+from django.conf import settings  # only if running inside Django
+
+def match_candidates_with_jd(candidate_excel_path, required_skills, min_match_percentage=50):
+    '''
+    Match candidates from Excel database with job requirements
+    
+    Args:
+        candidate_excel_path: Path to candidate Excel file
+        required_skills: List of skills from JD
+        min_match_percentage: Minimum percentage of skills that must match (default 50%)
+    
+    Returns:
+        List of matched candidates with match scores
+    '''
     try:
-        excel_path = settings.EXCEL_DATABASE_PATH
+        # Read candidate database
+        df = pd.read_excel(candidate_excel_path)
+        
+        # Normalize column names (remove spaces, lowercase)
+        df.columns = df.columns.str.strip()
+        
+        # Check if Skills column exists
+        if 'Skills' not in df.columns:
+            print("❌ Error: 'Skills' column not found in Excel")
+            return []
+        
+        matched_candidates = []
+        
+        # Normalize required skills for comparison
+        required_skills_lower = [skill.lower().strip() for skill in required_skills]
+        
+        for _, row in df.iterrows():
+            candidate_skills_str = str(row.get('Skills', ''))
+            
+            if not candidate_skills_str or candidate_skills_str.lower() == 'nan':
+                continue
+            
+            # Parse candidate skills (assume comma-separated)
+            candidate_skills = [s.lower().strip() for s in candidate_skills_str.split(',')]
+            
+            # Calculate skill matches
+            matched_skills = []
+            for req_skill in required_skills_lower:
+                for cand_skill in candidate_skills:
+                    # Check for exact or partial match
+                    if req_skill in cand_skill or cand_skill in req_skill:
+                        matched_skills.append(req_skill)
+                        break
+            
+            # Calculate match percentage
+            match_percentage = (len(matched_skills) / len(required_skills_lower)) * 100 if required_skills_lower else 0
+            
+            # Only include candidates above threshold
+            if match_percentage >= min_match_percentage:
+                candidate_data = {
+                    'name': row.get('Candidate Name', 'N/A'),
+                    'email': row.get('Email of Candidate', 'N/A'),
+                    'contact': row.get('Contact Number', 'N/A'),
+                    'location': row.get('Candidate Location', 'N/A'),
+                    'current_company': row.get('Current Company', 'N/A'),
+                    'designation': row.get('Current Designation', 'N/A'),
+                    'experience': row.get('Experience', 'N/A'),
+                    'linkedin': row.get('Linkedin URL', 'N/A'),
+                    'qualification': row.get('Qualification', 'N/A'),
+                    'skills': row.get('Skills', 'N/A'),
+                    'cv_link': row.get('Candidate CV Path', 'N/A'),
+                    'status': row.get('Candidate Status', 'N/A'),
+                    'matched_skills': matched_skills,
+                    'match_percentage': round(match_percentage, 1),
+                    'matched_skills_count': len(matched_skills),
+                    'total_required_skills': len(required_skills_lower)
+                }
+                matched_candidates.append(candidate_data)
+        
+        # Sort by match percentage (highest first)
+        matched_candidates.sort(key=lambda x: x['match_percentage'], reverse=True)
+        
+        return matched_candidates
+    
+    except Exception as e:
+        print(f"❌ Error matching candidates: {e}")
+        return []
+
+
+def export_matched_candidates(matched_candidates, output_path):
+    '''
+    Export matched candidates to Excel
+    '''
+    try:
+        df = pd.DataFrame(matched_candidates)
+        
+        # Reorder columns for better readability
+        column_order = [
+            'match_percentage', 'matched_skills_count', 'total_required_skills',
+            'name', 'email', 'contact', 'designation', 'current_company',
+            'experience', 'location', 'qualification', 'linkedin',
+            'skills', 'matched_skills', 'cv_link', 'status'
+        ]
+        
+        # Only include columns that exist
+        column_order = [col for col in column_order if col in df.columns]
+        df = df[column_order]
+        
+        # Export to Excel
+        df.to_excel(output_path, index=False, engine='openpyxl')
+        print(f"✅ Matched candidates exported to: {output_path}")
+        return True
+    
+    except Exception as e:
+        print(f"❌ Error exporting matched candidates: {e}")
+        return False
+
+
+def save_jd_to_excel(jd_data):
+    '''
+    Save job description data to Excel database
+    '''
+    try:
+        excel_path = Path(settings.EXCEL_DATABASE_PATH)
+        data_dir = excel_path.parent
         
         df_new = pd.DataFrame([jd_data])
         
@@ -263,14 +381,15 @@ def save_to_excel(jd_data):
             df_combined = df_new
         
         # Ensure data directory exists
-        settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        data_dir.mkdir(parents=True, exist_ok=True)
         
         # Save to Excel
         df_combined.to_excel(excel_path, index=False, engine='openpyxl')
-        print(f"✅ Successfully saved to Excel: {excel_path}")
+        print(f"✅ Successfully saved JD data to Excel: {excel_path}")
         
     except Exception as e:
-        print(f"❌ Error saving to Excel: {e}")
+        print(f"❌ Error saving JD data to Excel: {e}")
+
         
         
         
