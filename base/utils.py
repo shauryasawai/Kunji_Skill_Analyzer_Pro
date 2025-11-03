@@ -245,6 +245,135 @@ def expand_skills_with_map(primary_skills, secondary_skills):
     
     return list(expanded_secondary)
 
+def fetch_google_sheet_data(sheet_id, credentials_path=None):
+    '''
+    Fetch candidate data from Google Sheets
+    
+    Args:
+        sheet_id: Google Sheet ID
+        credentials_path: Path to service account JSON (optional, uses settings default)
+    
+    Returns:
+        DataFrame with candidate data
+    '''
+    import gspread
+    from google.oauth2.service_account import Credentials
+    
+    try:
+        # Setup credentials
+        if credentials_path is None:
+            credentials_path = settings.GOOGLE_SHEETS_CREDENTIALS
+        
+        scopes = [
+            'https://www.googleapis.com/auth/spreadsheets.readonly',
+            'https://www.googleapis.com/auth/drive.readonly'
+        ]
+        
+        creds = Credentials.from_service_account_file(credentials_path, scopes=scopes)
+        client = gspread.authorize(creds)
+        
+        # Open spreadsheet and get first sheet
+        spreadsheet = client.open_by_key(sheet_id)
+        worksheet = spreadsheet.sheet1  # Get first sheet
+        
+        # Get all values and convert to DataFrame
+        data = worksheet.get_all_records()
+        df = pd.DataFrame(data)
+        
+        print(f"✅ Successfully fetched {len(df)} rows from Google Sheet")
+        return df
+    
+    except Exception as e:
+        print(f"❌ Error fetching Google Sheet: {e}")
+        return pd.DataFrame()
+
+
+def match_candidates_from_google_sheet(sheet_id, required_skills, min_match_percentage=50):
+    '''
+    Match candidates from Google Sheets with job requirements
+    
+    Args:
+        sheet_id: Google Sheet ID
+        required_skills: List of skills from JD
+        min_match_percentage: Minimum percentage of skills that must match
+    
+    Returns:
+        List of matched candidates with match scores
+    '''
+    try:
+        # Fetch data from Google Sheets
+        df = fetch_google_sheet_data(sheet_id)
+        
+        if df.empty:
+            print("No data found in Google Sheet")
+            return []
+        
+        # Normalize column names
+        df.columns = df.columns.str.strip()
+        
+        # Check if Skills column exists
+        if 'Skills' not in df.columns:
+            print("Error: 'Skills' column not found in Google Sheet")
+            print(f"Available columns: {df.columns.tolist()}")
+            return []
+        
+        matched_candidates = []
+        
+        # Normalize required skills for comparison
+        required_skills_lower = [skill.lower().strip() for skill in required_skills]
+        
+        for idx, row in df.iterrows():
+            candidate_skills_str = str(row.get('Skills', ''))
+            
+            if not candidate_skills_str or candidate_skills_str == 'nan':
+                continue
+            
+            # Parse candidate skills (assume comma-separated)
+            candidate_skills = [s.lower().strip() for s in candidate_skills_str.split(',')]
+            
+            # Calculate skill matches
+            matched_skills = []
+            for req_skill in required_skills_lower:
+                for cand_skill in candidate_skills:
+                    # Check for exact match or partial match
+                    if req_skill in cand_skill or cand_skill in req_skill:
+                        matched_skills.append(req_skill)
+                        break
+            
+            # Calculate match percentage
+            match_percentage = (len(matched_skills) / len(required_skills_lower)) * 100 if required_skills_lower else 0
+            
+            # Only include candidates above threshold
+            if match_percentage >= min_match_percentage:
+                candidate_data = {
+                    'name': row.get('Candidate Name', 'N/A'),
+                    'email': row.get('Email', 'N/A'),
+                    'contact': row.get('Contact', 'N/A'),
+                    'location': row.get('Location', 'N/A'),
+                    'current_company': row.get('Current Company', 'N/A'),
+                    'designation': row.get('Designation', 'N/A'),
+                    'experience': row.get('Experience', 'N/A'),
+                    'linkedin': row.get('LinkedIn', 'N/A'),
+                    'qualification': row.get('Qualification', 'N/A'),
+                    'skills': row.get('Skills', 'N/A'),
+                    'cv_link': row.get('CV Link', 'N/A'),
+                    'status': row.get('Status', 'N/A'),
+                    'matched_skills': matched_skills,
+                    'match_percentage': round(match_percentage, 1),
+                    'matched_skills_count': len(matched_skills),
+                    'total_required_skills': len(required_skills_lower)
+                }
+                matched_candidates.append(candidate_data)
+        
+        # Sort by match percentage (highest first)
+        matched_candidates.sort(key=lambda x: x['match_percentage'], reverse=True)
+        
+        return matched_candidates
+    
+    except Exception as e:
+        print(f"Error matching candidates from Google Sheet: {e}")
+        return []
+    
 import pandas as pd
 from pathlib import Path
 from django.conf import settings  # only if running inside Django

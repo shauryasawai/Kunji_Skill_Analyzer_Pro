@@ -54,3 +54,29 @@ class CandidateDatabase(models.Model):
     
     def __str__(self):
         return f"{self.file_name} - {self.total_candidates} candidates"
+    
+class GoogleSheetDatabase(models.Model):
+    name = models.CharField(max_length=255)
+    sheet_url = models.URLField(max_length=500)
+    sheet_id = models.CharField(max_length=255, blank=True)
+    added_at = models.DateTimeField(auto_now_add=True)
+    last_synced = models.DateTimeField(null=True, blank=True)
+    total_candidates = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-added_at']
+    
+    def __str__(self):
+        return f"{self.name} - {self.total_candidates} candidates"
+    
+    def extract_sheet_id(self):
+        '''Extract Google Sheet ID from URL'''
+        import re
+        # Pattern: https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit...
+        pattern = r'/spreadsheets/d/([a-zA-Z0-9-_]+)'
+        match = re.search(pattern, self.sheet_url)
+        if match:
+            self.sheet_id = match.group(1)
+            return self.sheet_id
+        return None

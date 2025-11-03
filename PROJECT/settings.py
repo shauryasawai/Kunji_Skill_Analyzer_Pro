@@ -127,6 +127,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Google Sheets API Configuration
+GOOGLE_SHEETS_CREDENTIALS = BASE_DIR / 'credentials' / 'google_sheets_credentials.json'
+
 # OpenAI API Configuration
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 

@@ -1,14 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .forms import JDUploadForm, CandidateDatabaseUploadForm, CandidateMatchForm
-from .models import JobDescription, CandidateDatabase
+from .forms import JDUploadForm, GoogleSheetForm, CandidateMatchForm
+from .models import JobDescription, GoogleSheetDatabase
 from .utils import (extract_text_from_file, extract_skills_from_jd, save_jd_to_excel, 
-                    generate_linkedin_search_strings, match_candidates_with_jd, 
-                    export_matched_candidates)
+                    generate_linkedin_search_strings, match_candidates_from_google_sheet,
+                    export_matched_candidates, fetch_google_sheet_data)
 from datetime import datetime
 from django.conf import settings
+from django.utils import timezone
 import json
-import pandas as pd
 
 def upload_jd(request):
     if request.method == 'POST':
@@ -83,8 +83,8 @@ def results(request, pk):
         except:
             linkedin_searches = {}
     
-    # Get available candidate databases
-    candidate_databases = CandidateDatabase.objects.all()
+    # Get available Google Sheet databases
+    google_sheets = GoogleSheetDatabase.objects.filter(is_active=True)
     match_form = CandidateMatchForm()
     
     context = {
@@ -95,68 +95,88 @@ def results(request, pk):
         'skill_categories': jd.skill_categories,
         'responsibilities': jd.get_responsibilities_list(),
         'qualifications': jd.get_qualifications_list(),
-        'candidate_databases': candidate_databases,
+        'google_sheets': google_sheets,
         'match_form': match_form,
     }
     
     return render(request, 'base/results.html', context)
 
 
-def upload_candidate_database(request):
-    '''Upload candidate database Excel file'''
+def add_google_sheet(request):
+    '''Add a new Google Sheet database'''
     if request.method == 'POST':
-        form = CandidateDatabaseUploadForm(request.POST, request.FILES)
+        form = GoogleSheetForm(request.POST)
         
         if form.is_valid():
-            candidate_db = form.save(commit=False)
-            uploaded_file = request.FILES['file']
-            candidate_db.file_name = uploaded_file.name
-
-            # Read Excel directly from uploaded file
+            sheet_db = form.save(commit=False)
+            
+            # Extract sheet ID from URL
+            sheet_id = sheet_db.extract_sheet_id()
+            
+            if not sheet_id:
+                messages.error(request, "Invalid Google Sheets URL. Please check and try again.")
+                return render(request, 'base/add_google_sheet.html', {'form': form})
+            
+            # Try to fetch data to validate access
             try:
-                df = pd.read_excel(uploaded_file)
-                candidate_db.total_candidates = len(df)
+                df = fetch_google_sheet_data(sheet_id)
+                sheet_db.total_candidates = len(df)
+                sheet_db.last_synced = timezone.now()
+                sheet_db.save()
+                
+                messages.success(request, f"Google Sheet added successfully! {sheet_db.total_candidates} candidates found.")
+                return redirect('manage_google_sheets')
+            
             except Exception as e:
-                print(f"⚠️ Error reading Excel: {e}")
-                candidate_db.total_candidates = 0
-            
-            # Now save the record (this will write file to disk)
-            candidate_db.save()
-            
-            messages.success(
-                request,
-                f"✅ Candidate database uploaded successfully! {candidate_db.total_candidates} candidates found."
-            )
-            return redirect('manage_databases')
+                messages.error(request, f"Could not access Google Sheet. Error: {str(e)}")
+                messages.info(request, "Make sure the sheet is shared with your service account email.")
+                return render(request, 'base/add_google_sheet.html', {'form': form})
     else:
-        form = CandidateDatabaseUploadForm()
+        form = GoogleSheetForm()
     
-    return render(request, 'base/upload_database.html', {'form': form})
+    return render(request, 'base/add_google_sheet.html', {'form': form})
 
 
-def manage_databases(request):
-    '''View and manage candidate databases'''
-    databases = CandidateDatabase.objects.all()
-    return render(request, 'base/manage_databases.html', {'databases': databases})
+def manage_google_sheets(request):
+    '''View and manage Google Sheet databases'''
+    sheets = GoogleSheetDatabase.objects.all()
+    return render(request, 'base/manage_google_sheets.html', {'sheets': sheets})
+
+
+def sync_google_sheet(request, sheet_pk):
+    '''Sync/refresh candidate count from Google Sheet'''
+    sheet_db = get_object_or_404(GoogleSheetDatabase, pk=sheet_pk)
+    
+    try:
+        df = fetch_google_sheet_data(sheet_db.sheet_id)
+        sheet_db.total_candidates = len(df)
+        sheet_db.last_synced = timezone.now()
+        sheet_db.save()
+        
+        messages.success(request, f"Synced successfully! {sheet_db.total_candidates} candidates found.")
+    except Exception as e:
+        messages.error(request, f"Sync failed: {str(e)}")
+    
+    return redirect('manage_google_sheets')
 
 
 def match_candidates(request, jd_pk):
-    '''Match candidates from database with JD requirements'''
+    '''Match candidates from Google Sheet with JD requirements'''
     jd = get_object_or_404(JobDescription, pk=jd_pk)
     
     if request.method == 'POST':
         form = CandidateMatchForm(request.POST)
         
         if form.is_valid():
-            candidate_db = form.cleaned_data['candidate_database']
+            google_sheet = form.cleaned_data['google_sheet']
             min_match = form.cleaned_data['min_match_percentage']
             
             # Get required skills from JD
             required_skills = jd.get_all_skills_list()
             
-            # Match candidates
-            matched_candidates = match_candidates_with_jd(
-                candidate_db.file.path,
+            # Match candidates from Google Sheet
+            matched_candidates = match_candidates_from_google_sheet(
+                google_sheet.sheet_id,
                 required_skills,
                 min_match
             )
@@ -172,8 +192,9 @@ def match_candidates(request, jd_pk):
                 # Store in session for display
                 request.session['matched_candidates'] = matched_candidates[:50]  # Limit to 50 for display
                 request.session['output_file'] = str(output_path.relative_to(settings.MEDIA_ROOT))
+                request.session['sheet_name'] = google_sheet.name
                 
-                messages.success(request, f"Found {len(matched_candidates)} matching candidates!")
+                messages.success(request, f"Found {len(matched_candidates)} matching candidates from {google_sheet.name}!")
                 return redirect('show_matches', jd_pk=jd.pk)
             else:
                 messages.warning(request, "No candidates found matching the criteria. Try lowering the match percentage.")
@@ -187,11 +208,13 @@ def show_matches(request, jd_pk):
     jd = get_object_or_404(JobDescription, pk=jd_pk)
     matched_candidates = request.session.get('matched_candidates', [])
     output_file = request.session.get('output_file', '')
+    sheet_name = request.session.get('sheet_name', 'Google Sheet')
     
     context = {
         'jd': jd,
         'matched_candidates': matched_candidates,
         'output_file': output_file,
+        'sheet_name': sheet_name,
         'total_matches': len(matched_candidates),
     }
     

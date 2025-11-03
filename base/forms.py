@@ -1,5 +1,5 @@
 from django import forms
-from .models import JobDescription, CandidateDatabase
+from .models import JobDescription, CandidateDatabase,GoogleSheetDatabase
 
 class JDUploadForm(forms.ModelForm):
     domain = forms.ChoiceField(
@@ -32,13 +32,30 @@ class CandidateDatabaseUploadForm(forms.ModelForm):
             'file': forms.FileInput(attrs={'class': 'form-control', 'accept': '.xlsx,.xls'}),
         }
 
-
+class GoogleSheetForm(forms.ModelForm):
+    class Meta:
+        model = GoogleSheetDatabase
+        fields = ['name', 'sheet_url']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'e.g., Tech Candidates 2025'
+            }),
+            'sheet_url': forms.URLInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit'
+            }),
+        }
+        help_texts = {
+            'sheet_url': 'Make sure the Google Sheet is shared with the service account email'
+        }
+        
 class CandidateMatchForm(forms.Form):
-    candidate_database = forms.ModelChoiceField(
-        queryset=CandidateDatabase.objects.all(),
+    google_sheet = forms.ModelChoiceField(
+        queryset=GoogleSheetDatabase.objects.filter(is_active=True),
         widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Select Candidate Database',
-        empty_label='Choose a database...'
+        label='Select Google Sheet Database',
+        empty_label='Choose a Google Sheet...'
     )
     
     min_match_percentage = forms.IntegerField(
