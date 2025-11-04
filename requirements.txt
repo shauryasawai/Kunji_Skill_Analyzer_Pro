@@ -9,3 +9,6 @@ gspread==5.12.0
 google-auth==2.41.1
 google-auth-oauthlib==1.2.3
 google-auth-httplib2==0.31.0
+dj-database-url==3.0.1
+psycopg2-binary==2.9.11
+python-dotenv==1.2.1
