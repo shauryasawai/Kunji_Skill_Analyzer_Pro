@@ -11,6 +11,7 @@ from django.conf import settings
 from django.utils import timezone
 import json
 import os
+from pathlib import Path
 
 def upload_jd(request):
     if request.method == 'POST':
@@ -193,7 +194,7 @@ def match_candidates(request, jd_pk):
             if matched_candidates:
                 # Export to Excel (will be deleted after download)
                 output_filename = f"matched_candidates_{jd.title.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-                output_path = settings.MEDIA_ROOT / 'matched_candidates' / output_filename
+                output_path = Path(settings.MEDIA_ROOT) / 'matched_candidates' / output_filename
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 export_matched_candidates(matched_candidates, output_path)
