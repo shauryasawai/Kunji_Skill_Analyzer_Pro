@@ -141,8 +141,24 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Google Sheets API Configuration
-GOOGLE_SHEETS_CREDENTIALS = BASE_DIR / 'credentials' / 'google_sheets_credentials.json'
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+GOOGLE_SHEETS_CREDENTIALS = {
+    "type": os.getenv("GOOGLE_TYPE"),
+    "project_id": os.getenv("GOOGLE_PROJECT_ID"),
+    "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
+    "private_key": os.getenv("GOOGLE_PRIVATE_KEY"),
+    "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
+    "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+    "auth_uri": os.getenv("GOOGLE_AUTH_URI"),
+    "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
+    "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL"),
+    "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL"),
+    "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN"),
+}
+
 
 # OpenAI API Configuration
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
