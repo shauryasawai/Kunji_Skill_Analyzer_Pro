@@ -296,35 +296,26 @@ def cleanup_old_matched_files(days=1):
 def fetch_google_sheet_data(sheet_id, credentials_path=None):
     '''
     Fetch candidate data from Google Sheets
-    
-    Args:
-        sheet_id: Google Sheet ID
-        credentials_path: Path to service account JSON (optional, uses settings default)
-    
-    Returns:
-        DataFrame with candidate data
     '''
     import gspread
     from google.oauth2.service_account import Credentials
     
     try:
-        # Setup credentials
         if credentials_path is None:
-            credentials_path = settings.GOOGLE_SHEETS_CREDENTIALS
+            credentials_path = settings.GOOGLE_SHEETS_CREDENTIALS  # this is a dict
         
         scopes = [
             'https://www.googleapis.com/auth/spreadsheets.readonly',
             'https://www.googleapis.com/auth/drive.readonly'
         ]
         
-        creds = Credentials.from_service_account_file(credentials_path, scopes=scopes)
+        # ✅ use from_service_account_info for dict
+        creds = Credentials.from_service_account_info(credentials_path, scopes=scopes)
         client = gspread.authorize(creds)
         
-        # Open spreadsheet and get first sheet
         spreadsheet = client.open_by_key(sheet_id)
-        worksheet = spreadsheet.sheet1  # Get first sheet
+        worksheet = spreadsheet.sheet1
         
-        # Get all values and convert to DataFrame
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
         
@@ -334,6 +325,7 @@ def fetch_google_sheet_data(sheet_id, credentials_path=None):
     except Exception as e:
         print(f"❌ Error fetching Google Sheet: {e}")
         return pd.DataFrame()
+
 
 
 def match_candidates_from_google_sheet(sheet_id, required_skills, min_match_percentage=50):
