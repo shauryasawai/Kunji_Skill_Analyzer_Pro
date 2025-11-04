@@ -9,4 +9,5 @@ urlpatterns = [
     path('sync-sheet/<int:sheet_pk>/', views.sync_google_sheet, name='sync_google_sheet'),
     path('match-candidates/<int:jd_pk>/', views.match_candidates, name='match_candidates'),
     path('show-matches/<int:jd_pk>/', views.show_matches, name='show_matches'),
+    path('download-matches/<int:jd_pk>/', views.download_matched_file, name='download_matched_file'),  # NEW
 ]

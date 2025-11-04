@@ -1,9 +1,11 @@
 from django.db import models
+import os
 
 class JobDescription(models.Model):
     title = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    file = models.FileField(upload_to='jd_files/')
+    file = models.FileField(upload_to='jd_files/', blank=True, null=True)  # Make optional
+    jd_text = models.TextField(blank=True)  # Store extracted text instead of file
     all_skills = models.TextField(blank=True)  # All skills in one place
     skill_categories = models.JSONField(default=dict, blank=True)  # Categorized skills
     role_category = models.CharField(max_length=255, blank=True, null=True)
@@ -18,6 +20,21 @@ class JobDescription(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.role_category}"
+    
+    def delete_file(self):
+        '''Delete the physical file from storage'''
+        if self.file:
+            if os.path.isfile(self.file.path):
+                os.remove(self.file.path)
+                print(f"✅ Deleted JD file: {self.file.path}")
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Delete file after saving if it exists
+        if self.file and self.jd_text:
+            self.delete_file()
+            self.file = None
+            super().save(update_fields=['file'])
     
     def get_all_skills_list(self):
         '''Return all skills as a list'''
@@ -42,19 +59,8 @@ class JobDescription(models.Model):
         if self.linkedin_skills_string:
             return [s.strip() for s in self.linkedin_skills_string.split(',') if s.strip()]
         return []
-    
-class CandidateDatabase(models.Model):
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    file = models.FileField(upload_to='candidate_databases/')
-    total_candidates = models.IntegerField(default=0)
-    file_name = models.CharField(max_length=255)
-    
-    class Meta:
-        ordering = ['-uploaded_at']
-    
-    def __str__(self):
-        return f"{self.file_name} - {self.total_candidates} candidates"
-    
+
+
 class GoogleSheetDatabase(models.Model):
     name = models.CharField(max_length=255)
     sheet_url = models.URLField(max_length=500)

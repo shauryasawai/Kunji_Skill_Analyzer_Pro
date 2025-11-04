@@ -17,9 +17,9 @@
                 
                 {% if output_file %}
                 <div class="alert alert-success">
-                    <strong>✅ Export Complete!</strong>
-                    <a href="/media/{{ output_file }}" class="btn btn-sm btn-primary ms-3" download>
-                        📥 Download Full Report (Excel)
+                    <strong>✅ Export Complete!</strong> Matched from <strong>{{ sheet_name }}</strong>
+                    <a href="{% url 'download_matched_file' jd.pk %}" class="btn btn-sm btn-primary ms-3">
+                        📥 Download Full Report (Excel) - Auto-deletes after download
                     </a>
                 </div>
                 {% endif %}

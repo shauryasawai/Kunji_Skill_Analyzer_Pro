@@ -1,5 +1,5 @@
 from django import forms
-from .models import JobDescription, CandidateDatabase,GoogleSheetDatabase
+from .models import JobDescription, GoogleSheetDatabase
 
 class JDUploadForm(forms.ModelForm):
     domain = forms.ChoiceField(
@@ -23,14 +23,7 @@ class JDUploadForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Senior Marketing Manager'}),
             'file': forms.FileInput(attrs={'class': 'form-control', 'accept': '.txt,.pdf,.docx'}),
         }
-        
-class CandidateDatabaseUploadForm(forms.ModelForm):
-    class Meta:
-        model = CandidateDatabase
-        fields = ['file']
-        widgets = {
-            'file': forms.FileInput(attrs={'class': 'form-control', 'accept': '.xlsx,.xls'}),
-        }
+
 
 class GoogleSheetForm(forms.ModelForm):
     class Meta:
@@ -49,7 +42,8 @@ class GoogleSheetForm(forms.ModelForm):
         help_texts = {
             'sheet_url': 'Make sure the Google Sheet is shared with the service account email'
         }
-        
+
+
 class CandidateMatchForm(forms.Form):
     google_sheet = forms.ModelChoiceField(
         queryset=GoogleSheetDatabase.objects.filter(is_active=True),

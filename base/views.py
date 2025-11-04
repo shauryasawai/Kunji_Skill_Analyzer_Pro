@@ -1,14 +1,16 @@
+from django.http import FileResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import JDUploadForm, GoogleSheetForm, CandidateMatchForm
 from .models import JobDescription, GoogleSheetDatabase
-from .utils import (extract_text_from_file, extract_skills_from_jd, save_jd_to_excel, 
+from .utils import (cleanup_old_matched_files, delete_file_after_delay, extract_text_from_file, extract_skills_from_jd, save_jd_to_excel, 
                     generate_linkedin_search_strings, match_candidates_from_google_sheet,
                     export_matched_candidates, fetch_google_sheet_data)
 from datetime import datetime
 from django.conf import settings
 from django.utils import timezone
 import json
+import os
 
 def upload_jd(request):
     if request.method == 'POST':
@@ -24,7 +26,14 @@ def upload_jd(request):
             
             if not jd_text:
                 messages.error(request, "Could not extract text from the file.")
+                # Delete the uploaded file
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                jd.delete()
                 return redirect('upload_jd')
+            
+            # Store extracted text in database
+            jd.jd_text = jd_text
             
             # Extract comprehensive skills using OpenAI
             result = extract_skills_from_jd(jd_text, domain)
@@ -48,7 +57,7 @@ def upload_jd(request):
             jd.experience_level = result.get('experience_level', 'Unknown')
             jd.key_responsibilities = " | ".join(result.get('key_responsibilities', []))
             jd.qualifications = " | ".join(result.get('qualifications', [])) if isinstance(result.get('qualifications'), list) else result.get('qualifications', '')
-            jd.save()
+            jd.save()  # This will trigger file deletion via model's save() method
             
             # Save to Excel with comprehensive data
             excel_data = {
@@ -64,7 +73,7 @@ def upload_jd(request):
             }
             save_jd_to_excel(excel_data)
             
-            messages.success(request, "Job Description analyzed successfully! LinkedIn search strings generated.")
+            messages.success(request, "Job Description analyzed successfully! Original file deleted for security.")
             return redirect('results', pk=jd.pk)
     else:
         form = JDUploadForm()
@@ -182,17 +191,39 @@ def match_candidates(request, jd_pk):
             )
             
             if matched_candidates:
-                # Export to Excel
+                # Export to Excel (will be deleted after download)
                 output_filename = f"matched_candidates_{jd.title.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
                 output_path = settings.MEDIA_ROOT / 'matched_candidates' / output_filename
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 export_matched_candidates(matched_candidates, output_path)
                 
-                # Store in session for display
-                request.session['matched_candidates'] = matched_candidates[:50]  # Limit to 50 for display
+                # Store in session for display (limit to essential data)
+                session_candidates = []
+                for candidate in matched_candidates[:50]:
+                    session_candidates.append({
+                        'name': candidate['name'],
+                        'email': candidate['email'],
+                        'contact': candidate['contact'],
+                        'designation': candidate['designation'],
+                        'current_company': candidate['current_company'],
+                        'experience': candidate['experience'],
+                        'location': candidate['location'],
+                        'linkedin': candidate['linkedin'],
+                        'match_percentage': candidate['match_percentage'],
+                        'matched_skills_count': candidate['matched_skills_count'],
+                        'total_required_skills': candidate['total_required_skills'],
+                        'matched_skills': candidate['matched_skills'][:10],
+                        'cv_link': candidate['cv_link'],
+                    })
+                
+                request.session['matched_candidates'] = session_candidates
                 request.session['output_file'] = str(output_path.relative_to(settings.MEDIA_ROOT))
                 request.session['sheet_name'] = google_sheet.name
+                request.session['total_matches'] = len(matched_candidates)
+                
+                # Cleanup old matched files (older than 1 day)
+                cleanup_old_matched_files(days=1)
                 
                 messages.success(request, f"Found {len(matched_candidates)} matching candidates from {google_sheet.name}!")
                 return redirect('show_matches', jd_pk=jd.pk)
@@ -209,13 +240,51 @@ def show_matches(request, jd_pk):
     matched_candidates = request.session.get('matched_candidates', [])
     output_file = request.session.get('output_file', '')
     sheet_name = request.session.get('sheet_name', 'Google Sheet')
+    total_matches = request.session.get('total_matches', len(matched_candidates))
     
     context = {
         'jd': jd,
         'matched_candidates': matched_candidates,
         'output_file': output_file,
         'sheet_name': sheet_name,
-        'total_matches': len(matched_candidates),
+        'total_matches': total_matches,
     }
     
     return render(request, 'base/show_matches.html', context)
+
+def download_matched_file(request, jd_pk):
+    output_file = request.session.get('output_file', '')
+    
+    if not output_file:
+        raise Http404("File not found")
+    
+    file_path = settings.MEDIA_ROOT / output_file
+    
+    if not file_path.exists():
+        raise Http404("File not found")
+    
+    try:
+        # Read file into memory
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+        
+        # Delete immediately
+        os.remove(file_path)
+        
+        # Serve from memory
+        from io import BytesIO
+        response = FileResponse(
+            BytesIO(file_data),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{file_path.name}"'
+        
+        # Clear session
+        request.session.pop('matched_candidates', None)
+        request.session.pop('output_file', None)
+        
+        return response
+    
+    except Exception as e:
+        messages.error(request, f"Error: {str(e)}")
+        return redirect('show_matches', jd_pk=jd_pk)

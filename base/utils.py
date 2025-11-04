@@ -6,6 +6,7 @@ from pathlib import Path
 from django.conf import settings
 from PyPDF2 import PdfReader
 from docx import Document
+import os
 
 def generate_linkedin_search_strings(skills, role_title, experience_level):
     '''Generate optimized LinkedIn Recruiter boolean search strings'''
@@ -244,6 +245,53 @@ def expand_skills_with_map(primary_skills, secondary_skills):
                     break
     
     return list(expanded_secondary)
+
+def delete_file_after_delay(file_path, delay_seconds=5):
+    '''Delete a file after delay in background thread'''
+    import time
+    import threading
+    
+    def delete_file():
+        if delay_seconds > 0:
+            time.sleep(delay_seconds)
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"✅ Deleted file: {file_path}")
+        except Exception as e:
+            print(f"⚠️ Could not delete file {file_path}: {e}")
+    
+    if delay_seconds > 0:
+        thread = threading.Thread(target=delete_file)
+        thread.daemon = True
+        thread.start()
+    else:
+        delete_file()
+
+
+def cleanup_old_matched_files(days=1):
+    '''Delete matched candidate files older than specified days'''
+    from datetime import datetime, timedelta
+    
+    matched_dir = settings.MEDIA_ROOT / 'matched_candidates'
+    if not matched_dir.exists():
+        return
+    
+    cutoff_time = datetime.now() - timedelta(days=days)
+    deleted_count = 0
+    
+    for file_path in matched_dir.glob('*.xlsx'):
+        if datetime.fromtimestamp(file_path.stat().st_mtime) < cutoff_time:
+            try:
+                file_path.unlink()
+                deleted_count += 1
+                print(f"✅ Deleted old file: {file_path.name}")
+            except Exception as e:
+                print(f"⚠️ Could not delete {file_path.name}: {e}")
+    
+    if deleted_count > 0:
+        print(f"✅ Cleanup complete: {deleted_count} old files deleted")
+        
 
 def fetch_google_sheet_data(sheet_id, credentials_path=None):
     '''
