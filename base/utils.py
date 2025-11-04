@@ -273,7 +273,7 @@ def cleanup_old_matched_files(days=1):
     '''Delete matched candidate files older than specified days'''
     from datetime import datetime, timedelta
     
-    matched_dir = settings.MEDIA_ROOT / 'matched_candidates'
+    matched_dir = Path(settings.MEDIA_ROOT) / "matched_candidates"
     if not matched_dir.exists():
         return
     

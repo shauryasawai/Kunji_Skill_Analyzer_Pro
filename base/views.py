@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import JDUploadForm, GoogleSheetForm, CandidateMatchForm
 from .models import JobDescription, GoogleSheetDatabase
-from .utils import (cleanup_old_matched_files, delete_file_after_delay, extract_text_from_file, extract_skills_from_jd, save_jd_to_excel, 
+from .utils import (cleanup_old_matched_files, extract_text_from_file, extract_skills_from_jd, save_jd_to_excel, 
                     generate_linkedin_search_strings, match_candidates_from_google_sheet,
                     export_matched_candidates, fetch_google_sheet_data)
 from datetime import datetime
