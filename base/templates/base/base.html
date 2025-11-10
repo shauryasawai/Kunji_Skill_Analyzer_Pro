@@ -17,17 +17,25 @@
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'upload_jd' %}">🎯 JD Skill Analyzer Pro</a>
+        <div class="container-fluid d-flex justify-content-between">
+
+            <div>
+                <!-- BACK BUTTON -->
+                <a class="btn btn-outline-light me-2" href="javascript:history.back()">⬅ Back</a>
+
+                <!-- HOME LINK -->
+                <a class="navbar-brand" href="{% url 'upload_jd' %}">🎯 JD Skill Analyzer Pro</a>
+            </div>
+
+            <div>
+                <!-- LOGOUT BUTTON -->
+                <a class="btn btn-danger" href="{% url 'logout' %}">Logout</a>
+            </div>
+
         </div>
     </nav>
     
     <div class="container">
-
-        <!-- BACK BUTTON ADDED HERE -->
-        <a href="javascript:history.back()" class="btn btn-light mb-3">⬅ Go Back</a>
-        <!-- END BACK BUTTON -->
-
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
