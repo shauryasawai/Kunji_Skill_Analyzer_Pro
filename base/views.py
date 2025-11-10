@@ -259,7 +259,7 @@ def download_matched_file(request, jd_pk):
     if not output_file:
         raise Http404("File not found")
     
-    file_path = settings.MEDIA_ROOT / output_file
+    file_path = Path(settings.MEDIA_ROOT) / output_file
     
     if not file_path.exists():
         raise Http404("File not found")
