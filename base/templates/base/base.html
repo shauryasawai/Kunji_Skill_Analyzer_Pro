@@ -17,24 +17,26 @@
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid d-flex justify-content-between">
+    <div class="container-fluid d-flex justify-content-between">
 
-            <div>
-                <!-- BACK BUTTON -->
-                <a class="btn btn-outline-light me-2" href="javascript:history.back()">⬅ Back</a>
+        <div>
+            <!-- BACK BUTTON -->
+            <a class="btn btn-outline-light me-2" href="javascript:history.back()">⬅ Back</a>
 
-                <!-- HOME LINK -->
-                <a class="navbar-brand" href="{% url 'upload_jd' %}">🎯 JD Skill Analyzer Pro</a>
-            </div>
-
-            <div>
-                <!-- LOGOUT BUTTON -->
-                <a class="btn btn-danger" href="{% url 'logout' %}">Logout</a>
-            </div>
-
+            <!-- HOME LINK -->
+            <a class="navbar-brand" href="{% url 'upload_jd' %}">🎯 JD Skill Analyzer Pro</a>
         </div>
-    </nav>
-    
+
+        <div>
+            <!-- LOGOUT BUTTON (POST FORM) -->
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
     <div class="container">
         {% if messages %}
             {% for message in messages %}

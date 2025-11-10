@@ -93,7 +93,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 DATABASES = {
-    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=False)
 }
 
 # Password validation
@@ -132,6 +132,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/tmp'

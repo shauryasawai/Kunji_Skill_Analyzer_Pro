@@ -85,3 +85,54 @@ Traceback (most recent call last):
     raise ValueError(
 ValueError: The 'file' attribute has no file associated with it.
 ERROR 2025-11-10 14:36:50,157 basehttp 27896 25348 "POST / HTTP/1.1" 500 107803
+WARNING 2025-11-10 18:42:12,910 base 9624 4832 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:42:14,146 log 9624 4832 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:42:14,147 basehttp 9624 4832 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:42:20,525 base 9624 4832 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:42:20,939 log 9624 4832 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:42:20,940 basehttp 9624 4832 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:42:36,653 base 13656 24888 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:42:37,839 log 13656 24888 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:42:37,840 basehttp 13656 24888 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:42:38,922 base 13656 24888 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:42:39,387 log 13656 24888 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:42:39,388 basehttp 13656 24888 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:42:45,079 base 13656 24888 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:42:45,522 log 13656 24888 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:42:45,524 basehttp 13656 24888 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:43:04,188 base 13656 25124 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:43:05,204 log 13656 25124 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:43:05,204 basehttp 13656 25124 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:45:41,627 base 13656 8048 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:45:43,080 log 13656 8048 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:45:43,082 basehttp 13656 8048 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:45:46,763 base 13656 19968 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:45:51,158 log 13656 19968 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:45:51,159 basehttp 13656 19968 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:46:54,956 base 13656 22232 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:46:56,124 log 13656 22232 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:46:56,124 basehttp 13656 22232 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:46:58,321 base 13656 22232 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:46:58,736 log 13656 22232 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:46:58,736 basehttp 13656 22232 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:49:19,951 base 13656 28284 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:49:21,094 log 13656 28284 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:49:21,094 basehttp 13656 28284 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:49:53,691 base 13656 1600 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:49:53,693 log 13656 1600 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:49:53,694 basehttp 13656 1600 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:49:55,019 base 13656 1600 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:49:55,019 log 13656 1600 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:49:55,026 basehttp 13656 1600 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:49:55,879 base 13656 1600 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:49:55,882 log 13656 1600 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:49:55,882 basehttp 13656 1600 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:50:05,688 base 13656 22360 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:50:05,693 log 13656 22360 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:50:05,700 basehttp 13656 22360 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:50:07,170 base 13656 22360 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:50:07,172 log 13656 22360 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:50:07,172 basehttp 13656 22360 "GET /logout/ HTTP/1.1" 405 0
+WARNING 2025-11-10 18:50:23,097 base 13656 23772 Method Not Allowed (GET): /logout/
+WARNING 2025-11-10 18:50:23,098 log 13656 23772 Method Not Allowed: /logout/
+WARNING 2025-11-10 18:50:23,100 basehttp 13656 23772 "GET /logout/ HTTP/1.1" 405 0
